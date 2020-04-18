@@ -26,6 +26,7 @@ MANIFEST
 htmlcov/
 .coverage
 .coverage.*
+.mypy_cache/
 
 # pyenv
 .python-version

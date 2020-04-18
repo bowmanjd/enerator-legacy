@@ -8,11 +8,12 @@ import json
 import pathlib
 import re
 import sys
+import typing
 
-import cmarkgfm
-import pygments
-import pygments.formatters
-import pygments.lexers
+import cmarkgfm  # type: ignore
+import pygments  # type: ignore
+import pygments.formatters  # type: ignore
+import pygments.lexers  # type: ignore
 
 BRACE_RE = re.compile(r"{([^}]+)}")
 CODE_RE = re.compile(r"^```([a-z]+)?$(.+?)^```$", re.S | re.M)
@@ -34,7 +35,7 @@ if __name__ == "__main__":
 SITEMAP = pathlib.Path("pages.json")
 
 
-def create_dirs(dirpath):
+def create_dirs(dirpath: pathlib.Path):
     """Create directories and populate with appropriate __init__.py."""
     cwd = pathlib.Path.cwd()
     mod_init = dirpath / "__init__.py"
@@ -47,7 +48,7 @@ def create_dirs(dirpath):
         (directory / "__init__.py").touch()
 
 
-def cmd_add(sitepath, module, title):
+def cmd_add(sitepath: pathlib.Path, module: str, title: str):
     """Add a page.
 
     This creates the designated directories and files and updates the
@@ -58,13 +59,13 @@ def cmd_add(sitepath, module, title):
     sitemap_update(sitepath, module, title)
 
 
-def escape_braces(text, pattern=BRACE_RE):
+def escape_braces(text: str, pattern: typing.Pattern = BRACE_RE) -> str:
     """Escape interpolated variables so they will not be expanded yet"""
     escaped = pattern.sub(r"{{\1}}", text)
     return escaped
 
 
-def md_codeblock(match):
+def md_codeblock(match: typing.Match) -> str:
     """Substitution method to replace markdown code blocks with pygmented HTML."""
     lang, code = match.groups()
     try:
@@ -77,33 +78,33 @@ def md_codeblock(match):
     # return escaped
 
 
-def md_highlight(md):
+def md_highlight(md: str) -> str:
     """Replace markdown code blocks with pygmented HTML."""
     highlighted = CODE_RE.sub(md_codeblock, md)
     return highlighted
 
 
-def md_highlight_and_parse(content):
+def md_highlight_and_parse(content: str) -> str:
     """Code highlight then convert to HTML."""
     coded = md_highlight(content)
     html = md_parse(coded)
     return html
 
 
-def md_parse(md):
+def md_parse(md: str) -> str:
     """A separate function that can be adapted to a particular Markdown implementation"""
     parsed = cmarkgfm.markdown_to_html(md, CMARK_FLAGS)
     return parsed
 
 
-def module_to_path(module):
+def module_to_path(module: str) -> pathlib.Path:
     """Convert module name to filesystem path."""
     modpath = pathlib.Path(module.replace(".", "/")).resolve()
     return modpath
 
 
 @functools.lru_cache(maxsize=2)
-def sitemap_read():
+def sitemap_read() -> dict:
     """Load page information from sitemap file."""
     try:
         with SITEMAP.open() as handle:
@@ -113,7 +114,7 @@ def sitemap_read():
     return sitemap
 
 
-def sitemap_update(sitepath, module, title):
+def sitemap_update(sitepath: pathlib.Path, module: str, title: str):
     """Update sitemap file with page information."""
     sitemap = sitemap_read()
     sitemap[str(sitepath)] = {
@@ -123,13 +124,13 @@ def sitemap_update(sitepath, module, title):
     sitemap_write(sitemap)
 
 
-def sitemap_write(sitemap):
+def sitemap_write(sitemap: dict):
     """Write page information to sitemap file."""
     with SITEMAP.open("w") as handle:
         json.dump(sitemap, handle, indent=2)
 
 
-def parse_args(args):
+def parse_args(args: list):
     """Parse command line args."""
     parser = argparse.ArgumentParser(description=__doc__, prog="enerator")
     subparsers = parser.add_subparsers(help="Available subcommands")
