@@ -55,6 +55,7 @@ def cmd_add(sitepath, module, title):
     """
     dirpath = module_to_path(module)
     create_dirs(dirpath)
+    sitemap_update(sitepath, module, title)
 
 
 def escape_braces(text, pattern=BRACE_RE):
@@ -115,7 +116,7 @@ def sitemap_read():
 def sitemap_update(sitepath, module, title):
     """Update sitemap file with page information."""
     sitemap = sitemap_read()
-    sitemap[sitepath] = {
+    sitemap[str(sitepath)] = {
         "module": module,
         "title": title,
     }
@@ -125,7 +126,7 @@ def sitemap_update(sitepath, module, title):
 def sitemap_write(sitemap):
     """Write page information to sitemap file."""
     with SITEMAP.open("w") as handle:
-        json.dump(sitemap, handle)
+        json.dump(sitemap, handle, indent=2)
 
 
 def parse_args(args):

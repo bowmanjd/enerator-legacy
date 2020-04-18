@@ -8,6 +8,8 @@ import sys
 
 import enerator
 
+PATH = sys.path
+
 
 def test_md_parse():
     html = enerator.md_parse("**Hello**, _World_!")
@@ -66,7 +68,7 @@ def test_create_dirs(tmp_path):
 
 def test_cmd_add(tmp_path):
     os.chdir(tmp_path)
-    sys.path.append(str(tmp_path))
+    sys.path = ["", *PATH]
     module = "pages.programming.home"
     enerator.cmd_add(sitepath="/programming", module=module, title="Programming")
     page = importlib.import_module(module)
@@ -75,7 +77,10 @@ def test_cmd_add(tmp_path):
 
 def test_sitemap_read_no_file(tmp_path):
     os.chdir(tmp_path)
-    (tmp_path / enerator.SITEMAP).unlink(missing_ok=True)
+    try:
+        (tmp_path / enerator.SITEMAP).unlink()
+    except FileNotFoundError:
+        pass
     enerator.sitemap_read.cache_clear()
     result = enerator.sitemap_read()
     assert result == {}
@@ -109,3 +114,34 @@ def test_sitemap_update_new_file(tmp_path):
     result = enerator.sitemap_read()
     assert result[sitepath]["module"] == module
     assert result[sitepath]["title"] == title
+
+
+def test_cmdline_add(tmp_path):
+    os.chdir(tmp_path)
+    sys.path = ["", *PATH]
+    sitepath1 = "/"
+    module1 = "sites.home"
+    title1 = "Jonathan Bowman"
+    args = ["add", "-m", module1, "-t", title1, sitepath1]
+    enerator.parse_args(args)
+    sitepath2 = "/programming"
+    module2 = "sites.programming"
+    title2 = "Jonathan Bowman's Programming"
+    args = ["add", "--module", module2, "--title", title2, sitepath2]
+    enerator.parse_args(args)
+    page = importlib.import_module(module1)
+    page2 = importlib.import_module(module2)
+    enerator.sitemap_read.cache_clear()
+    result = enerator.sitemap_read()
+    assert len(page.page()) > 0
+    assert len(page2.page()) > 0
+    assert result[sitepath1]["module"] == module1
+    assert result[sitepath1]["title"] == title1
+    assert result[sitepath2]["module"] == module2
+    assert result[sitepath2]["title"] == title2
+
+
+def test_main(capsys):
+    enerator.main()
+    captured = capsys.readouterr()
+    assert "usage" in captured.out
