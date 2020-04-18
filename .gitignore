@@ -21,6 +21,12 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# testing
+.tox/
+htmlcov/
+.coverage
+.coverage.*
+
 # pyenv
 .python-version
 

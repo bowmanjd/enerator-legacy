@@ -7,6 +7,7 @@ import functools
 import json
 import pathlib
 import re
+import sys
 
 import cmarkgfm
 import pygments
@@ -46,7 +47,7 @@ def create_dirs(dirpath):
         (directory / "__init__.py").touch()
 
 
-def cmd_add(module, sitepath):
+def cmd_add(sitepath, module, title):
     """Add a page.
 
     This creates the designated directories and files and updates the
@@ -100,19 +101,18 @@ def module_to_path(module):
     return modpath
 
 
-@functools.lru_cache
+@functools.lru_cache(maxsize=2)
 def sitemap_read():
     """Load page information from sitemap file."""
-    sitemap = {}
     try:
         with SITEMAP.open() as handle:
             sitemap = json.load(handle)
     except FileNotFoundError:
-        pass
+        sitemap = {}
     return sitemap
 
 
-def sitemap_update(module, sitepath, title):
+def sitemap_update(sitepath, module, title):
     """Update sitemap file with page information."""
     sitemap = sitemap_read()
     sitemap[sitepath] = {
@@ -128,8 +128,8 @@ def sitemap_write(sitemap):
         json.dump(sitemap, handle)
 
 
-def run():
-    """Parse command line and run script."""
+def parse_args(args):
+    """Parse command line args."""
     parser = argparse.ArgumentParser(description=__doc__, prog="enerator")
     subparsers = parser.add_subparsers(help="Available subcommands")
     parser_add = subparsers.add_parser("add", help=("create new page."),)
@@ -146,6 +146,14 @@ def run():
     )
     parser_add.set_defaults(func=cmd_add)
 
-    kwargs = vars(parser.parse_args())
-    func = kwargs.pop("func")
-    func(**kwargs)
+    if args:
+        kwargs = vars(parser.parse_args(args))
+        func = kwargs.pop("func")
+        func(**kwargs)
+    else:
+        parser.print_help()
+
+
+def main():
+    """Run as script."""
+    parse_args(sys.argv[1:])

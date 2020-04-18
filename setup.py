@@ -6,6 +6,7 @@ setup(
     version="0.1",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    entry_points={"console_scripts": ["enerator=enerator:run"]},
+    entry_points={"console_scripts": ["enerator=enerator:main"]},
     install_requires=["cmarkgfm", "lxml", "pygments"],
+    zip_safe=False,
 )
