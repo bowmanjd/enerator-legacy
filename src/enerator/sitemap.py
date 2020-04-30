@@ -4,6 +4,7 @@
 import functools
 import json
 import pathlib
+import typing
 
 SITEMAP = pathlib.Path("pages.json")
 
@@ -24,6 +25,10 @@ def sitemap_read() -> dict:
     return sitemap
 
 
+def sitemap_loader() -> typing.Callable:
+    """Parse each module in sitemap for related info."""
+
+
 def sitemap_update(sitepath: pathlib.PurePosixPath, module: str, title: str) -> None:
     """Update sitemap file with page information.
 
@@ -34,8 +39,8 @@ def sitemap_update(sitepath: pathlib.PurePosixPath, module: str, title: str) -> 
 
     """
     sitemap = sitemap_read()
-    sitemap[str(sitepath)] = {
-        "module": module,
+    sitemap[module] = {
+        "sitepath": str(sitepath),
         "title": title,
     }
     sitemap_write(sitemap)
@@ -49,3 +54,4 @@ def sitemap_write(sitemap: dict) -> None:
     """
     with SITEMAP.open("w") as fp:
         json.dump(sitemap, fp, indent=2)
+    sitemap_read.cache_clear()

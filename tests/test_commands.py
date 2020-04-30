@@ -3,48 +3,31 @@
 
 import argparse
 import importlib
-import os
 import pathlib
-import sys
 
 import enerator.commands
 import enerator.sitemap
 
-PATH = sys.path
+from .cheaters import set_path  # noqa:WPS300
 
 
-def test_module_to_path() -> None:
-    modpath = enerator.commands.module_to_path("pages.mydir.mypage")
-    cwd_len = len(pathlib.Path.cwd().parts)
-    assert modpath.parts[cwd_len:] == ("pages", "mydir", "mypage")
-
-
-def test_create_dirs(tmp_path: pathlib.Path) -> None:
-    """Test create_dirs."""
-    os.chdir(tmp_path)
-    dirpath = tmp_path / "parent_dir" / "child_dir"
-    enerator.commands.create_dirs(dirpath)
-    content = (dirpath / "__init__.py").read_text()
-    assert "import enerator" in content
-    assert (dirpath.parent / "__init__.py").exists()
-    assert not (tmp_path / "__init__.py").exists()
-
-
-def test_cmd_add(tmp_path) -> None:
-    os.chdir(tmp_path)
-    sys.path = ["", *PATH]
-    module = "pages.programming.home"
+def test_cmdline_gen(tmp_path: pathlib.Path, capsys) -> None:
+    set_path(tmp_path)
     args = argparse.Namespace(
-        sitepath="/programming", module=module, title="Programming",
+        sitepath="/programming", module="pages.programming.home", title="Programming",
     )
-    enerator.commands.cmd_add(args)
-    page = importlib.import_module(module)
-    assert page.page()
+    enerator.commands.add(args)
+    cmd_args = ["gen", "--module", args.module, "--out", "out"]
+    enerator.commands.parse_args(cmd_args)
+    captured = capsys.readouterr()
+    generated_file = pathlib.Path("out/programming/index.html")
+    assert args.sitepath in captured.out
+    assert str(generated_file) in captured.out
+    assert generated_file.exists()
 
 
 def test_cmdline_add(tmp_path) -> None:
-    os.chdir(tmp_path)
-    sys.path = ["", *PATH]
+    set_path(tmp_path)
     sitepath1 = "/"
     module1 = "sites.home"
     title1 = "Jonathan Bowman"
@@ -59,12 +42,12 @@ def test_cmdline_add(tmp_path) -> None:
     page2 = importlib.import_module(module2)
     enerator.sitemap.sitemap_read.cache_clear()
     result = enerator.sitemap.sitemap_read()
-    assert page.page()
-    assert page2.page()
-    assert result[sitepath1]["module"] == module1
-    assert result[sitepath1]["title"] == title1
-    assert result[sitepath2]["module"] == module2
-    assert result[sitepath2]["title"] == title2
+    assert page.page({})
+    assert page2.page({})
+    assert result[module1]["sitepath"] == sitepath1
+    assert result[module1]["title"] == title1
+    assert result[module2]["sitepath"] == sitepath2
+    assert result[module2]["title"] == title2
 
 
 def test_main(capsys) -> None:
