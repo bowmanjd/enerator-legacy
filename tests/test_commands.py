@@ -42,8 +42,8 @@ def test_cmdline_add(tmp_path) -> None:
     page2 = importlib.import_module(module2)
     enerator.sitemap.sitemap_read.cache_clear()
     result = enerator.sitemap.sitemap_read()
-    assert page.page({})
-    assert page2.page({})
+    assert page.page({})  # type: ignore
+    assert page2.page({})  # type: ignore
     assert result[module1]["sitepath"] == sitepath1
     assert result[module1]["title"] == title1
     assert result[module2]["sitepath"] == sitepath2
