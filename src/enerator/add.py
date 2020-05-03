@@ -9,39 +9,53 @@ INIT = '''#!/usr/bin/env python3
 
 import enerator  # type: ignore
 
+CONFIG = {
+  "title": "Title of this page",
+}
+
 
 def page(rel: dict) -> str:
     """Output page content.
 
+    Args:
+        rel: related info (variables, etc.) as a dict
+
     Returns:
         string with page content
     """
-    md = "*Hello*, site content!"
-    return enerator.md_highlight_and_parse(md)
+
+    config = {**CONFIG, **rel}
+    tpl = "<html><body><h1>{title}</h1>{body}</body></html>"
+    md = "*Hello*, {title}!"
+    config["body"] = enerator.md_highlight_and_parse(md)
+    return tpl.format(**config)
 
 
 if __name__ == "__main__":
-    print(page())
+    print(page(CONFIG))
 '''
 
 
-def add(sitepath: pathlib.PurePosixPath, module: str, title: str) -> pathlib.Path:
+def add(
+    module: str, sitepath: pathlib.PurePosixPath, sitemap: bool = True
+) -> pathlib.Path:
     """Add a page.
 
     This creates the designated directories and files and updates the
     sitemap.
 
     Args:
-        sitepath: desired URL path
         module: string form of Python module name
-        title: page title for links, etc.
+        sitepath: desired URL path
+        sitemap: whether or not to add to sitemap
 
     Returns:
         the path to the directory of the module
     """
     dirpath = module_to_path(module)
     create_dirs(dirpath)
-    sitemap_update(sitepath, module, title)
+    if sitemap:
+        sitemap_update(module, {"sitepath": str(sitepath)})
     return dirpath
 
 

@@ -39,9 +39,8 @@ def test_sitemap_update_new_file(tmp_path):
     set_path(tmp_path)
     sitepath = "/mypage"
     module = "pages.mypage"
-    title = "My Page"
-    enerator.sitemap.sitemap_update(sitepath, module, title)
+    enerator.sitemap.sitemap_update(module, {"sitepath": sitepath})
+
     enerator.sitemap.sitemap_read.cache_clear()
     result = enerator.sitemap.sitemap_read()
     assert result[module]["sitepath"] == sitepath
-    assert result[module]["title"] == title

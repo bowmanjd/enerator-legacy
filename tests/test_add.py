@@ -33,9 +33,7 @@ def test_add(tmp_path: pathlib.Path) -> None:
     os.chdir(tmp_path)
     module = "pages.programming.home"
     enerator.add.add(
-        sitepath=pathlib.PurePosixPath("/programming"),
-        module=module,
-        title="Programming",
+        module=module, sitepath=pathlib.PurePosixPath("/programming"),
     )
     page = importlib.import_module(module)
     assert page.page({})  # type: ignore

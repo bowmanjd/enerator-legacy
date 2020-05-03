@@ -11,7 +11,10 @@ class Cmdargs(typing.NamedTuple):
 
     args: typing.Tuple[str, ...]
     desc: str
-    cast: type = str
+    cast: typing.Optional[type] = str
+    action: str = "store"
+    default: typing.Any = None
+    dest: typing.Optional[str] = None
 
 
 @functools.lru_cache(maxsize=2)
@@ -59,7 +62,17 @@ def subcommand(arglist: typing.Tuple[Cmdargs, ...]) -> typing.Callable:
         description = (func.__doc__ or "No description").partition("\n")[0]
         parser = subparsers.add_parser(func.__name__, description=description)
         for arg in arglist:
-            parser.add_argument(*arg.args, type=arg.cast, help=arg.desc)
+            kwargs: typing.Dict[str, typing.Union[str, type]] = {
+                "action": arg.action,
+                "help": arg.desc,
+            }
+            if arg.default is not None:
+                kwargs["default"] = arg.default
+            if arg.dest is not None:
+                kwargs["dest"] = arg.dest
+            if arg.cast is not None:
+                kwargs["type"] = arg.cast
+            parser.add_argument(*arg.args, **kwargs)  # type: ignore
         parser.set_defaults(func=func)
         return func
 

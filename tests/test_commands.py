@@ -14,7 +14,7 @@ from .cheaters import set_path  # noqa:WPS300
 def test_cmdline_gen(tmp_path: pathlib.Path, capsys) -> None:
     set_path(tmp_path)
     args = argparse.Namespace(
-        sitepath="/programming", module="pages.programming.home", title="Programming",
+        sitepath="/programming", module="pages.programming.home", sitemap=True,
     )
     enerator.commands.add(args)
     cmd_args = ["gen", "--module", args.module, "--out", "out"]
@@ -26,17 +26,15 @@ def test_cmdline_gen(tmp_path: pathlib.Path, capsys) -> None:
     assert generated_file.exists()
 
 
-def test_cmdline_add(tmp_path) -> None:
+def test_cmdline_add_pages(tmp_path) -> None:
     set_path(tmp_path)
     sitepath1 = "/"
     module1 = "sites.home"
-    title1 = "Jonathan Bowman"
-    args = ["add", "-m", module1, "-t", title1, sitepath1]
+    args = ["add", "-s", sitepath1, module1]
     enerator.commands.parse_args(args)
     sitepath2 = "/programming"
     module2 = "sites.programming"
-    title2 = "Jonathan Bowman's Programming"
-    args = ["add", "--module", module2, "--title", title2, sitepath2]
+    args = ["add", "--sitepath", sitepath2, module2]
     enerator.commands.parse_args(args)
     page = importlib.import_module(module1)
     page2 = importlib.import_module(module2)
@@ -45,9 +43,19 @@ def test_cmdline_add(tmp_path) -> None:
     assert page.page({})  # type: ignore
     assert page2.page({})  # type: ignore
     assert result[module1]["sitepath"] == sitepath1
-    assert result[module1]["title"] == title1
     assert result[module2]["sitepath"] == sitepath2
-    assert result[module2]["title"] == title2
+
+
+def test_cmdline_add_template(tmp_path) -> None:
+    set_path(tmp_path)
+    module1 = "templates.main"
+    args = ["add", "-n", module1]
+    enerator.commands.parse_args(args)
+    page = importlib.import_module(module1)
+    enerator.sitemap.sitemap_read.cache_clear()
+    pages = enerator.sitemap.sitemap_read()
+    assert page.page({})  # type: ignore
+    assert pages.get(module1) is None
 
 
 def test_main(capsys) -> None:

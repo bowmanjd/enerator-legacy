@@ -29,20 +29,17 @@ def sitemap_loader() -> typing.Callable:
     """Parse each module in sitemap for related info."""
 
 
-def sitemap_update(sitepath: pathlib.PurePosixPath, module: str, title: str) -> None:
+def sitemap_update(module: str, page_info: typing.Mapping[str, str]) -> None:
     """Update sitemap file with page information.
 
     Args:
-        sitepath: URL path for this page, as a pathlib PurePosixPath.
         module: string form of Python module name
-        title: string to use as the title of the page
+        page_info: mapping of keys and values to update
 
     """
     sitemap = sitemap_read()
-    sitemap[module] = {
-        "sitepath": str(sitepath),
-        "title": title,
-    }
+    existing = sitemap.get(module, {})
+    sitemap[module] = {**existing, **page_info}
     sitemap_write(sitemap)
 
 
