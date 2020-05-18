@@ -7,6 +7,6 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     entry_points={"console_scripts": ["enerator=enerator.commands:main"]},
-    install_requires=["cmarkgfm", "lxml", "pygments"],
+    install_requires=["cmarkgfm", "pygments", "uvicorn"],
     zip_safe=False,
 )

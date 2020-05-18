@@ -1,10 +1,32 @@
 """Simple Static Site Generator using Python."""
 
+import functools
 import importlib
 import pathlib
 import sys
+import typing
 
-from enerator.sitemap import sitemap_read
+from enerator.add import module_to_path
+
+sys.path = list(dict.fromkeys(("", *sys.path)))
+
+REMEMBER_PAGE_MODULES = 100
+
+
+@functools.lru_cache(maxsize=REMEMBER_PAGE_MODULES)
+def load_module(module: str) -> typing.Tuple[dict, typing.Callable]:
+    """Load specific page generation module.
+
+    Args:
+        module: string form of Python module name
+
+    Returns:
+        the loaded module
+    """
+    page = importlib.import_module(module)
+    config = page.CONFIG  # type: ignore
+    page_gen = page.page  # type: ignore
+    return (config, page_gen)
 
 
 def generate_page(module: str, rel: dict) -> str:
@@ -17,8 +39,9 @@ def generate_page(module: str, rel: dict) -> str:
     Returns:
         generated page text
     """
-    page = importlib.import_module(module)
-    return page.page(rel)  # type: ignore
+    rel["modpath"] = module_to_path(module)
+    _, page = load_module(module)
+    return page(rel)
 
 
 def generate(module: str, out: pathlib.Path) -> pathlib.Path:
@@ -31,10 +54,7 @@ def generate(module: str, out: pathlib.Path) -> pathlib.Path:
     Returns:
         Full path to generated filename
     """
-    sys.path = ["", *sys.path]
-
-    sitemap = sitemap_read()
-    rel = sitemap[module]
+    rel, page = load_module(module)
     output_dir = (out / rel["sitepath"][1:]).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "index.html"

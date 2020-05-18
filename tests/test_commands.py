@@ -13,11 +13,9 @@ from .cheaters import set_path  # noqa:WPS300
 
 def test_cmdline_gen(tmp_path: pathlib.Path, capsys) -> None:
     set_path(tmp_path)
-    args = argparse.Namespace(
-        sitepath="/programming", module="pages.programming.home", sitemap=True,
-    )
+    args = argparse.Namespace(sitepath="/programming", module="pages.programming.home")
     enerator.commands.add(args)
-    cmd_args = ["gen", "--module", args.module, "--out", "out"]
+    cmd_args = ["gen", "--module", args.module, "--output", "out"]
     enerator.commands.parse_args(cmd_args)
     captured = capsys.readouterr()
     generated_file = pathlib.Path("out/programming/index.html")
@@ -31,6 +29,7 @@ def test_cmdline_add_pages(tmp_path) -> None:
     sitepath1 = "/"
     module1 = "sites.home"
     args = ["add", "-s", sitepath1, module1]
+    enerator.sitemap.sitemap_read.cache_clear()
     enerator.commands.parse_args(args)
     sitepath2 = "/programming"
     module2 = "sites.programming"
@@ -42,20 +41,22 @@ def test_cmdline_add_pages(tmp_path) -> None:
     result = enerator.sitemap.sitemap_read()
     assert page.page({})  # type: ignore
     assert page2.page({})  # type: ignore
-    assert result[module1]["sitepath"] == sitepath1
-    assert result[module2]["sitepath"] == sitepath2
+    assert module1 in result
+    assert module2 in result
+    assert page.CONFIG["sitepath"] == sitepath1  # type: ignore
+    assert page2.CONFIG["sitepath"] == sitepath2  # type: ignore
 
 
 def test_cmdline_add_template(tmp_path) -> None:
     set_path(tmp_path)
     module1 = "templates.main"
-    args = ["add", "-n", module1]
+    args = ["add", module1]
     enerator.commands.parse_args(args)
     page = importlib.import_module(module1)
     enerator.sitemap.sitemap_read.cache_clear()
     pages = enerator.sitemap.sitemap_read()
     assert page.page({})  # type: ignore
-    assert pages.get(module1) is None
+    assert module1 not in pages
 
 
 def test_main(capsys) -> None:

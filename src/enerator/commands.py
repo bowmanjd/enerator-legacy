@@ -6,24 +6,17 @@ from argparse import Namespace
 
 import enerator.add
 import enerator.generate
+import enerator.preview
 from enerator.subcommand import Cmdargs, parse_args, subcommand
 
 
 @subcommand(
     (
         Cmdargs(("module",), "module name, such as page.my_title"),
-        Cmdargs(("-t", "--title"), "title of the page"),
         Cmdargs(
-            ("-s", "--sitepath",),
+            ("-s", "--sitepath"),
             "sitepath, such as /category/my_page/",
             pathlib.PurePosixPath,
-        ),
-        Cmdargs(
-            ("-n", "--nositemap"),
-            "only generate files, do not update sitemap (for templates)",
-            cast=None,
-            action="store_false",
-            dest="sitemap",
         ),
     )
 )
@@ -36,8 +29,7 @@ def add(args: Namespace) -> None:
     Args:
         args: a Namespace object returned from argparse parser.
     """
-    print(args.sitemap)
-    dirpath = enerator.add.add(args.module, args.sitepath, args.sitemap)
+    dirpath = enerator.add.add(args.module, args.sitepath)
     sys.stdout.write(f"{dirpath}\n")
 
 
@@ -55,6 +47,16 @@ def gen(args: Namespace) -> None:
     """
     output_path = enerator.generate.generate(args.module, args.output)
     sys.stdout.write(f"{output_path}\n")
+
+
+@subcommand((Cmdargs(("-m", "--module"), "module name, such as page.my_title"),))
+def preview(args: Namespace) -> None:
+    """Generate page(s).
+
+    Args:
+        args: a Namespace object returned from argparse parser.
+    """
+    enerator.preview.preview_page(args.module)
 
 
 def main() -> None:

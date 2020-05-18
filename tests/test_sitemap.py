@@ -1,7 +1,6 @@
 """Tests sitemap functions."""
 
 import contextlib
-import json
 
 import enerator.sitemap
 
@@ -14,13 +13,13 @@ def test_sitemap_read_no_file(tmp_path):
         (tmp_path / enerator.sitemap.SITEMAP).unlink()
     enerator.sitemap.sitemap_read.cache_clear()
     result = enerator.sitemap.sitemap_read()
-    assert isinstance(result, dict)
+    assert isinstance(result, list)
 
 
 def test_sitemap_read_file(tmp_path):
     set_path(tmp_path)
-    payload = {"key": "value"}
-    (tmp_path / enerator.sitemap.SITEMAP).write_text(json.dumps(payload))
+    payload = ["something", "else"]
+    (tmp_path / enerator.sitemap.SITEMAP).write_text("\n".join(payload))
     enerator.sitemap.sitemap_read.cache_clear()
     result = enerator.sitemap.sitemap_read()
     assert result == payload
@@ -28,19 +27,18 @@ def test_sitemap_read_file(tmp_path):
 
 def test_sitemap_write_file(tmp_path):
     set_path(tmp_path)
-    payload = {"key2": "value2"}
+    payload = ["value1", "value2"]
     enerator.sitemap.sitemap_write(payload)
     enerator.sitemap.sitemap_read.cache_clear()
     result = enerator.sitemap.sitemap_read()
     assert result == payload
 
 
-def test_sitemap_update_new_file(tmp_path):
+def test_sitemap_add_new_file(tmp_path):
     set_path(tmp_path)
-    sitepath = "/mypage"
     module = "pages.mypage"
-    enerator.sitemap.sitemap_update(module, {"sitepath": sitepath})
+    enerator.sitemap.sitemap_add(module)
 
     enerator.sitemap.sitemap_read.cache_clear()
     result = enerator.sitemap.sitemap_read()
-    assert result[module]["sitepath"] == sitepath
+    assert module in result

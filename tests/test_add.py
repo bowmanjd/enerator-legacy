@@ -7,7 +7,7 @@ import sys
 
 import enerator.add
 
-from .cheaters import set_path  # noqa:WPS300
+from .cheaters import set_path
 
 sys.path = ["", *sys.path]
 
@@ -23,8 +23,6 @@ def test_create_dirs(tmp_path: pathlib.Path) -> None:
     set_path(tmp_path)
     dirpath = tmp_path / "parent_dir" / "child_dir"
     enerator.add.create_dirs(dirpath)
-    content = (dirpath / "__init__.py").read_text()
-    assert "import enerator" in content
     assert (dirpath.parent / "__init__.py").exists()
     assert not (tmp_path / "__init__.py").exists()
 

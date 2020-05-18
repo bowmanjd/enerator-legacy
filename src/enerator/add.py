@@ -1,17 +1,16 @@
 """Methods for creating/scaffolding pages."""
 
 import pathlib
+import typing
 
-from enerator.sitemap import sitemap_update
+from enerator.sitemap import sitemap_add
 
 INIT = '''#!/usr/bin/env python3
 """Page generator."""
 
-import enerator  # type: ignore
+import enerator
 
-CONFIG = {
-  "title": "Title of this page",
-}
+CONFIG = {{"title": "The tech blog of Jonathan Bowman", "sitepath": "{sitepath}"}}
 
 
 def page(rel: dict) -> str:
@@ -23,22 +22,17 @@ def page(rel: dict) -> str:
     Returns:
         string with page content
     """
-
-    config = {**CONFIG, **rel}
-    tpl = "<html><body><h1>{title}</h1>{body}</body></html>"
-    md = "*Hello*, {title}!"
-    config["body"] = enerator.md_highlight_and_parse(md)
-    return tpl.format(**config)
+    config = {{**CONFIG, **rel}}
+    md = "*Hello*, {{title}}!"
+    return enerator.md_highlight_and_parse(md)
 
 
 if __name__ == "__main__":
-    print(page(CONFIG))
+    print(page({{}}))
 '''
 
 
-def add(
-    module: str, sitepath: pathlib.PurePosixPath, sitemap: bool = True
-) -> pathlib.Path:
+def add(module: str, sitepath: typing.Optional[pathlib.PurePosixPath]) -> pathlib.Path:
     """Add a page.
 
     This creates the designated directories and files and updates the
@@ -47,35 +41,38 @@ def add(
     Args:
         module: string form of Python module name
         sitepath: desired URL path
-        sitemap: whether or not to add to sitemap
 
     Returns:
         the path to the directory of the module
     """
     dirpath = module_to_path(module)
-    create_dirs(dirpath)
-    if sitemap:
-        sitemap_update(module, {"sitepath": str(sitepath)})
+    mod_init = create_dirs(dirpath)
+    if not mod_init.exists() or mod_init.stat().st_size == 0:
+        mod_init.touch(0o775)  # noqa:WPS432
+        mod_init.write_text(INIT.format(sitepath=sitepath))
+    if sitepath is not None:
+        sitemap_add(module)
     return dirpath
 
 
-def create_dirs(dirpath: pathlib.Path) -> None:
+def create_dirs(dirpath: pathlib.Path) -> pathlib.Path:
     """Create directories and populate with appropriate __init__.py.
 
     Args:
         dirpath: a pathlib Path.
 
+    Returns:
+        path to __init__.py
+
     """
     cwd = pathlib.Path.cwd()
     mod_init = dirpath / "__init__.py"
     dirpath.mkdir(parents=True, exist_ok=True)
-    if not mod_init.exists():
-        mod_init.touch(0o775)  # noqa:WPS432
-        mod_init.write_text(INIT)
-    for directory in dirpath.parents:
+    for directory in mod_init.parents:
         if directory == cwd:
             break
         (directory / "__init__.py").touch()
+    return mod_init
 
 
 def module_to_path(module: str) -> pathlib.Path:
