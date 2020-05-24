@@ -43,8 +43,8 @@ def test_cmdline_add_pages(tmp_path) -> None:
     assert page2.page({})  # type: ignore
     assert module1 in result
     assert module2 in result
-    assert page.CONFIG["sitepath"] == sitepath1  # type: ignore
-    assert page2.CONFIG["sitepath"] == sitepath2  # type: ignore
+    assert page.CONFIG["path"] == sitepath1  # type: ignore
+    assert page2.CONFIG["path"] == sitepath2  # type: ignore
 
 
 def test_cmdline_add_template(tmp_path) -> None:

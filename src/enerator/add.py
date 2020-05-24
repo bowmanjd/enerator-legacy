@@ -10,7 +10,7 @@ INIT = '''#!/usr/bin/env python3
 
 import enerator
 
-CONFIG = {{"title": "The tech blog of Jonathan Bowman", "sitepath": "{sitepath}"}}
+CONFIG = {{"title": "The tech blog of Jonathan Bowman", "path": "{sitepath}"}}
 
 
 def page(rel: dict) -> str:

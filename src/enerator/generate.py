@@ -7,6 +7,7 @@ import sys
 import typing
 
 from enerator.add import module_to_path
+from enerator.sitemap import sitemap_read
 
 sys.path = list(dict.fromkeys(("", *sys.path)))
 
@@ -27,6 +28,29 @@ def load_module(module: str) -> typing.Tuple[dict, typing.Callable]:
     config = page.CONFIG  # type: ignore
     page_gen = page.page  # type: ignore
     return (config, page_gen)
+
+
+def url_for(module: str) -> str:
+    """Generate link to page.
+
+    Args:
+        module: module string
+
+    Returns:
+        Absolute path
+    """
+    rel, _ = load_module(module)
+    return rel["path"]
+
+
+@functools.lru_cache(maxsize=2)
+def routes() -> dict:
+    """Generate all links to all pages in sitemap.
+
+    Returns:
+        A dict of all page urls
+    """
+    return {url_for(module): module for module in sitemap_read()}
 
 
 def generate_page(module: str, rel: dict) -> str:
@@ -55,7 +79,7 @@ def generate(module: str, out: pathlib.Path) -> pathlib.Path:
         Full path to generated filename
     """
     rel, page = load_module(module)
-    output_dir = (out / rel["sitepath"][1:]).resolve()
+    output_dir = (out / rel["path"][1:]).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "index.html"
     web_content = generate_page(module, rel)

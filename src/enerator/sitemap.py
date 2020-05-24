@@ -5,7 +5,7 @@ import functools
 import pathlib
 import typing
 
-SITEMAP = pathlib.Path("pages.json")
+SITEMAP = pathlib.Path("pages.txt")
 
 
 @functools.lru_cache(maxsize=2)
