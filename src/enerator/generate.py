@@ -14,6 +14,28 @@ sys.path = list(dict.fromkeys(("", *sys.path)))
 REMEMBER_PAGE_MODULES = 100
 
 
+def link_name(module: str) -> str:
+    """Convert module name to case with prefix.
+
+    Args:
+        module: module string
+
+    Returns:
+        Snake cased string with 'url' prefix
+    """
+    return f"url_{module.replace('.', '_')}"
+
+
+@functools.lru_cache(maxsize=2)
+def all_urls() -> dict:
+    """Generate all links to all pages in sitemap.
+
+    Returns:
+        A dict of all page urls
+    """
+    return {link_name(module): url_for(module) for module in sitemap_read()}
+
+
 @functools.lru_cache(maxsize=REMEMBER_PAGE_MODULES)
 def load_module(module: str) -> typing.Tuple[dict, typing.Callable]:
     """Load specific page generation module.
@@ -64,6 +86,7 @@ def generate_page(module: str, rel: dict) -> str:
         generated page text
     """
     rel["modpath"] = module_to_path(module)
+    rel = {**rel, **all_urls()}
     _, page = load_module(module)
     return page(rel)
 
