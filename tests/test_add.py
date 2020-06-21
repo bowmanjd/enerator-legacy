@@ -1,15 +1,9 @@
 """Tests for enerator."""
 
 import importlib
-import os
 import pathlib
-import sys
 
 import enerator.add
-
-from .cheaters import set_path
-
-sys.path = ["", *sys.path]
 
 
 def test_module_to_path() -> None:
@@ -18,17 +12,15 @@ def test_module_to_path() -> None:
     assert modpath.parts[cwd_len:] == ("pages", "mydir", "mypage")
 
 
-def test_create_dirs(tmp_path: pathlib.Path) -> None:
+def test_create_dirs(set_path) -> None:
     """Test create_dirs."""
-    set_path(tmp_path)
-    dirpath = tmp_path / "parent_dir" / "child_dir"
+    dirpath = set_path / "parent_dir" / "child_dir"
     enerator.add.create_dirs(dirpath)
     assert (dirpath.parent / "__init__.py").exists()
-    assert not (tmp_path / "__init__.py").exists()
+    assert not (set_path / "__init__.py").exists()
 
 
-def test_add(tmp_path: pathlib.Path) -> None:
-    os.chdir(tmp_path)
+def test_add(set_path) -> None:
     module = "pages.programming.home"
     enerator.add.add(
         module=module, sitepath=pathlib.PurePosixPath("/programming"),

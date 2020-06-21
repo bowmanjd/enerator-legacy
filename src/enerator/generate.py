@@ -11,8 +11,6 @@ from enerator.sitemap import sitemap_read
 
 sys.path = list(dict.fromkeys(("", *sys.path)))
 
-REMEMBER_PAGE_MODULES = 100
-
 
 def link_name(module: str) -> str:
     """Convert module name to case with prefix.
@@ -36,17 +34,24 @@ def all_urls() -> dict:
     return {link_name(module): url_for(module) for module in sitemap_read()}
 
 
-@functools.lru_cache(maxsize=REMEMBER_PAGE_MODULES)
-def load_module(module: str) -> typing.Tuple[dict, typing.Callable]:
+def load_module(
+    module: str, devmode: bool = False
+) -> typing.Tuple[dict, typing.Callable]:
     """Load specific page generation module.
 
     Args:
         module: string form of Python module name
+        devmode: live reload if True
 
     Returns:
         the loaded module
     """
-    page = importlib.import_module(module)
+    page = None
+    if devmode:
+        page = sys.modules.get(module)
+        if page:
+            importlib.reload(page)
+    page = page or importlib.import_module(module)
     config = page.CONFIG  # type: ignore
     page_gen = page.page  # type: ignore
     return (config, page_gen)
@@ -87,7 +92,7 @@ def generate_page(module: str, rel: dict) -> str:
     """
     rel["modpath"] = module_to_path(module)
     rel = {**rel, **all_urls()}
-    _, page = load_module(module)
+    _, page = load_module(module, rel.get("devmode", False))
     return page(rel)
 
 

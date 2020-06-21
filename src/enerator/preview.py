@@ -91,9 +91,11 @@ async def page_body_gen(module: str) -> typing.AsyncGenerator[bytes, None]:
             (
                 "<script>",
                 f"  let eventSource = new EventSource('/sse/{module}');",
-                "  eventSource.addEventListener('message', function(e) {",
-                "    document.querySelector('main').innerHTML += e.data + '<br>';",
-                "  }, false)",
+                "  eventSource.addEventListener('message', (e) => {",
+                "    if (e.data === 'modified') {",
+                "      window.location.reload();",
+                "    }",
+                "  });",
                 "</script>",
                 "</html>",
             )
@@ -133,7 +135,9 @@ def last_modified_times(files: list) -> dict:
     return {filepath: filepath.stat().st_mtime for filepath in files}
 
 
-async def sse_body_gen(module: str, tls: bool) -> typing.AsyncGenerator[bytes, None]:
+async def sse_body_gen(  # noqa:WPS210
+    module: str, tls: bool
+) -> typing.AsyncGenerator[bytes, None]:
     """Asynchronously yield event stream.
 
     Args:
@@ -214,17 +218,19 @@ async def app(scope: dict, receive: typing.Callable, send: typing.Callable) -> N
     await send({"type": "http.response.body", "body": b""})
 
 
-def preview_page(module: str) -> None:
+def preview_page() -> uvicorn.Server:
     """Preview page content.
 
-    Args:
-        module: string form of Python module name
+    Returns:
+        Uvicorn server (call run() method)
     """
-    uvicorn.run(
+    config = uvicorn.Config(
         "enerator.preview:app",
         host="0.0.0.0",
+        lifespan="off",
+        log_level="info",
         port=PORT,
-        log_level="debug",
         ssl_certfile="/home/jbowman/devel/localdev.bowmanjd.com+4.pem",
         ssl_keyfile="/home/jbowman/devel/localdev.bowmanjd.com+4-key.pem",
     )
+    return uvicorn.Server(config=config)

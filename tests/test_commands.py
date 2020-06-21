@@ -8,11 +8,8 @@ import pathlib
 import enerator.commands
 import enerator.sitemap
 
-from .cheaters import set_path  # noqa:WPS300
 
-
-def test_cmdline_gen(tmp_path: pathlib.Path, capsys) -> None:
-    set_path(tmp_path)
+def test_cmdline_gen(set_path, capsys) -> None:
     args = argparse.Namespace(sitepath="/programming", module="pages.programming.home")
     enerator.commands.add(args)
     cmd_args = ["gen", "--module", args.module, "--output", "out"]
@@ -24,8 +21,7 @@ def test_cmdline_gen(tmp_path: pathlib.Path, capsys) -> None:
     assert generated_file.exists()
 
 
-def test_cmdline_add_pages(tmp_path) -> None:
-    set_path(tmp_path)
+def test_cmdline_add_pages(set_path) -> None:
     sitepath1 = "/"
     module1 = "sites.home"
     args = ["add", "-s", sitepath1, module1]
@@ -47,8 +43,7 @@ def test_cmdline_add_pages(tmp_path) -> None:
     assert page2.CONFIG["path"] == sitepath2  # type: ignore
 
 
-def test_cmdline_add_template(tmp_path) -> None:
-    set_path(tmp_path)
+def test_cmdline_add_template(set_path) -> None:
     module1 = "templates.main"
     args = ["add", module1]
     enerator.commands.parse_args(args)

@@ -8,6 +8,7 @@ import enerator.add
 import enerator.generate
 import enerator.preview
 from enerator.subcommand import Cmdargs, parse_args, subcommand
+from enerator.generate import url_for
 
 
 @subcommand(
@@ -49,14 +50,14 @@ def gen(args: Namespace) -> None:
     sys.stdout.write(f"{output_path}\n")
 
 
-@subcommand((Cmdargs(("-m", "--module"), "module name, such as page.my_title"),))
-def preview(args: Namespace) -> None:
+@subcommand(())
+def preview(args: Namespace) -> None:  # pragma: no cover
     """Generate page(s).
 
     Args:
         args: a Namespace object returned from argparse parser.
     """
-    enerator.preview.preview_page(args.module)
+    enerator.preview.preview_page().run()
 
 
 def main() -> None:
